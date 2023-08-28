@@ -1,0 +1,146 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: rgb(189, 140, 140);
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column; /* Stack elements vertically */
+        justify-content: center; /* Horizontally center */
+        align-items: center; /* Vertically center */
+        height: 100%;
+      }
+      .submit {
+        width: 207px;
+        background-color: black;
+        color: white;
+        border-radius: 4px;
+        border: black;
+        height: 30px;
+      }
+      .URL {
+        border-radius: 4px;
+        height: 30px;
+        background-color: rgb(172, 154, 154);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div id="msg"></div>
+      <img id="qrImg" src="" />
+      <h1>QRCODE Genertor</h1>
+      <form>
+        <label for="qrUrl">URL</label>
+        <input
+          class="input"
+          type="text"
+          id="qrUrl"
+          name="qrUrl"
+          placeholder="Enter your URL.."
+        /><br /><br />
+        <input
+          class="submit"
+          type="submit"
+          value="Submit"
+          onclick="fetchURL(); return false"
+        />
+        <br /><br />
+
+        <div id="hiddenForm" style="display: none">
+          <label for="qrUrl">Email</label>
+          <input
+            class="input"
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Enter your Email"
+          /><br /><br />
+          <input
+            class="submit"
+            type="submit"
+            value="Submit"
+            onclick="sendMail(); return false"
+          />
+        </div>
+      </form>
+    </div>
+
+    <script>
+      var emailQR;
+      const fetchURL = async () => {
+        const qrUrl = document.getElementById("qrUrl").value;
+        await generateQr(qrUrl);
+      };
+      const generateQr = async (url) => {
+        try {
+          const response = await fetch(`/api/v1/qr`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ url }),
+          });
+
+          const result = await response.json();
+
+          if (result && result.data) {
+            document.getElementById("qrImg").src = result.data;
+            document.getElementById("hiddenForm").style.display = "block";
+            emailQR = result.data;
+          }
+        } catch (e) {
+          document.getElementById("msg").innerHTML = e;
+        }
+        setTimeout(function () {
+          document.getElementById("msg").innerHTML = "";
+        }, 2000);
+      };
+
+      const sendMail = async () => {
+        const email = document.getElementById("email").value;
+        const payload = {
+          email: email,
+          img: emailQR,
+        };
+
+        await generatemail(payload);
+      };
+
+      const generatemail = async (payload) => {
+        try {
+          const response = await fetch(`api/v1/mail`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.json();
+
+          if (result && result.data) {
+            document.getElementById("msg").innerHTML = result.data;
+            setTimeout(function () {
+              document.getElementById("msg").innerHTML = "";
+            }, 2000);
+          }
+        } catch (e) {
+          document.getElementById("msg").innerHTML = e;
+        }
+        setTimeout(function () {
+          document.getElementById("msg").innerHTML = "";
+        }, 2000);
+      };
+    </script>
+  </body>
+</html>
